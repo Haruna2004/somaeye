@@ -7,16 +7,15 @@ class AudioOutput:
         print("Audio Output: Using native macOS 'say' engine.")
 
     def speak(self, text):
-        """Uses the native macOS 'say' command for zero-latency local speech."""
+        """Uses the native macOS 'say' command in a non-blocking manner."""
         if not text:
             return
 
         print(f"Speaking: {text}")
         try:
-            # Using 'Tessa' voice as requested for a more pleasant sound
-            subprocess.run(["say", "-v", "Tessa", text], check=True)
+            # Using Popen to make it non-blocking so the reasoning loop continues
+            subprocess.Popen(["say", "-v", "Tessa", text])
             
         except Exception as e:
-            # Fallback to simulated print if even the system command fails
             print(f"Native Speech Error: {e}")
             print(f"Speech (Simulated): {text}")

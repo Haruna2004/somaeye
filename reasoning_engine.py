@@ -1,16 +1,17 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 import os
 from logger_utils import logger, time_it
 
 class ReasoningEngine:
     def __init__(self, api_key):
-        logger.debug("GEMINI | Configuring Reasoning Engine...")
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        logger.debug("GEMINI | Configuring Reasoning Engine (google-genai)...")
+        self.client = genai.Client(api_key=api_key)
+        self.model_id = 'gemini-3-flash-preview'
         self.event_buffer = []
         self.max_buffer_size = 20
-        logger.debug("GEMINI | Engine ready.")
+        logger.debug(f"GEMINI | Engine ready with model: {self.model_id}")
 
     def add_event(self, event):
         self.event_buffer.append(event)
@@ -59,22 +60,27 @@ class ReasoningEngine:
         """
 
         try:
-            logger.debug(f"GEMINI | Requesting evaluation. Image: {bool(image_bytes)}")
-            content = [prompt_text]
-            if image_bytes:
-                content.append({
-                    "mime_type": "image/jpeg",
-                    "data": image_bytes
-                })
-
-            response = self.model.generate_content(content)
-            text = response.text.strip()
+            logger.debug(f"GEMINI | Requesting evaluation ({self.model_id}). Image: {bool(image_bytes)}")
             
-            # Extract JSON if model wraps in markdown
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0].strip()
-            elif text.startswith("```"):
-                text = text.split("```")[1].strip()
+            contents = [prompt_text]
+            if image_bytes:
+                contents.append(
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/jpeg"
+                    )
+                )
+
+            # Use asynchronous client for non-blocking generation
+            response = await self.client.aio.models.generate_content(
+                model=self.model_id,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
+            )
+            
+            text = response.text.strip()
             
             if not text or text.lower() == "no_alert":
                 return {"trigger": False, "message": ""}

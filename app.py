@@ -39,7 +39,7 @@ current_prompt = "Alert if someone is acting suspicious or lingering."
 system_paused = False
 latest_frame_bytes = None
 last_gemini_vision_time = 0
-VISION_INTERVAL = 10 
+VISION_INTERVAL = 5 
 
 # Shared Connection Manager
 class ConnectionManager:
@@ -115,7 +115,7 @@ async def reasoning_loop():
                     
         except Exception as e:
             logger.error(f"REASONING | Error in loop: {e}")
-        await asyncio.sleep(2)
+        await asyncio.sleep(0.5)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
