@@ -32,7 +32,11 @@ async function startWebcam() {
             return;
         }
         mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 }
+            video: { 
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 },
+                aspectRatio: 1.7777777778
+            }
         });
         video.srcObject = mediaStream;
         if (!ws || ws.readyState !== WebSocket.OPEN) {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SomaEye | AI Surveillance by Pasoma</title>
+    <title>SomaEye | AI Surveillance by somaeye</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', path='/css/style.css') }}"
@@ -11,7 +11,7 @@
   </head>
   <body>
     <div class="dashboard-container">
-      <!-- Pasoma Style Header -->
+      <!-- somaeye Style Header -->
       <header class="main-header">
         <div class="logo">SomaEye WatchTower</div>
         <div class="status-pills">
@@ -38,11 +38,8 @@
           <div class="feed-grid">
             <div class="card">
               <div class="card-title">
-                <span
-                  class="loader"
-                  style="width: 12px; height: 12px; border-width: 1px"
-                ></span>
-                Live Source
+                <span class="live-dot {{ pause_class }}"></span>
+                Live Feed
               </div>
               <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline muted></video>
@@ -51,8 +48,8 @@
 
             <div class="card">
               <div class="card-title">
-                <span style="color: #3b82f6">●</span>
-                AI Inference
+                <span class="inference-dot {{ pause_class }}"></span>
+                Inference
               </div>
               <div class="video-wrapper">
                 <img
@@ -71,7 +68,7 @@
           </div>
 
           <div class="card" style="flex: 1">
-            <div class="card-title">Project Context & Rules</div>
+            <div class="card-title">Rules</div>
             <div class="prompt-group">
               <textarea
                 id="promptInput"
