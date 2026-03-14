@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SomaEye | AI Surveillance by Pasoma</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='/css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Pasoma Style Header -->
+      <header class="main-header">
+        <div class="logo">SomaEye WatchTower</div>
+        <div class="status-pills">
+          <button id="pauseBtn" class="btn-top {{ pause_class }}">
+            {{ pause_label }}
+          </button>
+          <div class="status-indicator">
+            <span id="connectionDot" class="status-dot dot-connecting"></span>
+            <span id="connectionStatus">Connecting...</span>
+          </div>
+          <div
+            class="status-indicator"
+            style="--status-color: {{ status_color }}; --status-glow: {{ status_color }}80;"
+          >
+            <span id="systemDot" class="status-dot"></span>
+            <span id="systemStatus">{{ status_text }}</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid-layout">
+        <!-- Left: Hero Feeds -->
+        <div class="main-feed-group">
+          <div class="feed-grid">
+            <div class="card">
+              <div class="card-title">
+                <span
+                  class="loader"
+                  style="width: 12px; height: 12px; border-width: 1px"
+                ></span>
+                Live Source
+              </div>
+              <div class="video-wrapper">
+                <video id="webcam" autoplay playsinline muted></video>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span style="color: #3b82f6">●</span>
+                AI Inference
+              </div>
+              <div class="video-wrapper">
+                <img
+                  id="processedFeed"
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt="AI Processed Stream"
+                />
+                <div id="aiOverlay" class="video-overlay {{ pause_class }}">
+                  <h2 style="margin-bottom: 0.5rem">AI OFFLINE</h2>
+                  <p style="color: var(--text-secondary); font-size: 0.9rem">
+                    Resume system to start reasoning
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="flex: 1">
+            <div class="card-title">Project Context & Rules</div>
+            <div class="prompt-group">
+              <textarea
+                id="promptInput"
+                placeholder="Describe what the AI should look for... (e.g., 'Alert if someone is wearing a dark shirt and eyeglasses')"
+              ></textarea>
+              <button id="savePromptBtn" class="btn-primary">Deploy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Alerts & Logs -->
+        <div class="controls-sidebar">
+          <div
+            class="card"
+            style="height: 100%; display: flex; flex-direction: column"
+          >
+            <div class="card-title">Reports</div>
+            <div id="log" class="incident-log">
+              <!-- Alerts will appear here -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Hidden canvas for frame capture -->
+    <canvas id="captureCanvas" style="display: none"></canvas>
+
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+  </body>
+</html>
