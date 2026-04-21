@@ -1,5 +1,3 @@
-const video = document.getElementById("webcam");
-const processedImg = document.getElementById("processedFeed");
 const connectionStatus = document.getElementById("connectionStatus");
 const connectionDot = document.getElementById("connectionDot");
 const systemStatus = document.getElementById("systemStatus");
@@ -10,10 +8,38 @@ const promptInput = document.getElementById("promptInput");
 const savePromptBtn = document.getElementById("savePromptBtn");
 
 let ws;
-let mediaStream = null;
-const canvas = document.getElementById("captureCanvas");
-const ctx = canvas.getContext("2d");
-let isProcessing = false;
+
+// Tabs
+const tabConfigBtn = document.getElementById("tabConfigBtn");
+const tabMonitorBtn = document.getElementById("tabMonitorBtn");
+const localConfigSection = document.getElementById("localConfigSection");
+const monitorSection = document.getElementById("monitorSection");
+const monitorGrid = document.getElementById("monitorGrid");
+const emptyGridState = document.getElementById("emptyGridState");
+
+function toggleEmptyState() {
+    if (monitorGrid.children.length === 0) {
+        monitorGrid.style.display = "none";
+        emptyGridState.style.display = "block";
+    } else {
+        monitorGrid.style.display = "grid";
+        emptyGridState.style.display = "none";
+    }
+}
+
+tabConfigBtn.onclick = () => {
+    tabConfigBtn.classList.add("active");
+    tabMonitorBtn.classList.remove("active");
+    localConfigSection.style.display = "grid";
+    monitorSection.style.display = "none";
+};
+
+tabMonitorBtn.onclick = () => {
+    tabMonitorBtn.classList.add("active");
+    tabConfigBtn.classList.remove("active");
+    monitorSection.style.display = "block";  // or whatever layout works
+    localConfigSection.style.display = "none";
+};
 
 // Load persistent prompt
 const savedPrompt = localStorage.getItem("ai_surveillance_prompt");
@@ -26,37 +52,13 @@ if (savedPrompt) {
     });
 }
 
-async function startWebcam() {
-    try {
-        if (document.getElementById("aiOverlay").classList.contains("paused")) {
-            return;
-        }
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 },
-                aspectRatio: 1.7777777778
-            }
-        });
-        video.srcObject = mediaStream;
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-            initWebSocket();
-        }
-    } catch (err) {
-        console.error("Webcam error:", err);
-    }
-}
-
-function stopWebcam() {
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-        mediaStream = null;
-    }
-}
+// Webcam handling is moved to sender.html/sender.js
+// Dashboard now only acts as a remote stream viewer
 
 function initWebSocket() {
-    ws = new WebSocket("ws://" + window.location.host + "/ws");
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const viewerId = "viewer_" + Math.floor(Math.random() * 10000);
+    ws = new WebSocket(`${protocol}//${window.location.host}/ws/dashboard/${viewerId}`);
     ws.onopen = () => {
         connectionStatus.innerText = "Sentry Connected";
         connectionDot.className = "status-dot dot-online";
@@ -68,11 +70,39 @@ function initWebSocket() {
         const data = JSON.parse(event.data);
         isProcessing = false;
 
-        if (data.image) {
-            processedImg.src = "data:image/jpeg;base64," + data.image;
-            requestAnimationFrame(streamFrames);
-        } else if (data.status) {
-            requestAnimationFrame(streamFrames);
+        if (data.type === "camera_frame") {
+            const camId = data.camera_id;
+            
+            // All cameras are now remote, push to monitor grid
+            let remoteImg = document.getElementById("remote_" + camId);
+            if (!remoteImg) {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.id = "card_" + camId;
+                card.innerHTML = `
+                    <div class="card-title">
+                        <span class="inference-dot"></span>
+                        Camera: ${camId}
+                    </div>
+                    <div class="video-wrapper">
+                        <img id="remote_${camId}" src="data:image/jpeg;base64,${data.image}" alt="Remote feed" style="width: 100%; height: auto; border-radius: 8px;">
+                    </div>
+                `;
+                monitorGrid.appendChild(card);
+                toggleEmptyState();
+            } else {
+                remoteImg.src = "data:image/jpeg;base64," + data.image;
+            }
+        } else if (data.type === "camera_disconnected") {
+            const camCard = document.getElementById("card_" + data.camera_id);
+            if (camCard) {
+                camCard.style.transition = "opacity 0.3s ease";
+                camCard.style.opacity = "0";
+                setTimeout(() => {
+                    camCard.remove();
+                    toggleEmptyState();
+                }, 300);
+            }
         }
 
         if (data.alert) {
@@ -90,22 +120,7 @@ function initWebSocket() {
     };
 }
 
-function streamFrames() {
-    if (isProcessing || !ws || ws.readyState !== WebSocket.OPEN || document.getElementById("aiOverlay").classList.contains("paused")) {
-        if (!document.getElementById("aiOverlay").classList.contains("paused")) {
-            requestAnimationFrame(streamFrames);
-        }
-        return;
-    }
-
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    ctx.drawImage(video, 0, 0);
-
-    const frame = canvas.toDataURL("image/jpeg", 0.5);
-    isProcessing = true;
-    ws.send(JSON.stringify({ image: frame.split(',')[1] }));
-}
+// No local streaming needed for dashboard
 
 savePromptBtn.onclick = async () => {
     const p = promptInput.value;
@@ -127,16 +142,8 @@ savePromptBtn.onclick = async () => {
 
 pauseBtn.onclick = async () => {
     pauseBtn.disabled = true;
-    const isCurrentlyPaused = document.getElementById("aiOverlay").classList.contains("paused");
-
     await fetch("/toggle-pause", { method: "POST" });
-
-    if (!isCurrentlyPaused) {
-        stopWebcam();
-    } else {
-        await startWebcam();
-    }
     location.reload();
 };
 
-startWebcam();
+initWebSocket();

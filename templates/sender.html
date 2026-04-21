@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watch Tower | Camera Sender</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}" />
+    <style>
+      .sender-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 1rem;
+      }
+      .video-wrapper {
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 2rem;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sender-container">
+      <h2>Camera Sender Node</h2>
+      <p id="camLabel" style="margin-bottom: 1rem; color: var(--text-secondary);"></p>
+      
+      <div class="video-wrapper card">
+        <video id="webcam" autoplay playsinline muted style="width: 100%; border-radius: 8px;"></video>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn-primary">Start Transmission</button>
+        <button id="stopBtn" class="btn-top" style="background-color: var(--danger-color);" disabled>Stop</button>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <span id="connectionDot" class="status-dot dot-offline"></span>
+        <span id="connectionStatus">Offline</span>
+      </div>
+    </div>
+
+    <!-- Hidden canvas for frame capture -->
+    <canvas id="captureCanvas" style="display: none"></canvas>
+    <script src="{{ url_for('static', path='/js/sender.js') }}?v={{ range(1, 1000000) | random }}"></script>
+  </body>
+</html>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Watch Tower | AI Surveillance by Pasoma</title>
+    <title>SomaEye | AI Surveillance by Pasoma</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', path='/css/style.css') }}"
@@ -13,7 +13,11 @@
     <div class="dashboard-container">
       <!-- somaeye Style Header -->
       <header class="main-header">
-        <div class="logo">WatchTower</div>
+        <div class="logo">SomaEye</div>
+        <div class="header-tabs">
+          <button class="tab-btn active" id="tabConfigBtn">Dashboard</button>
+          <button class="tab-btn" id="tabMonitorBtn">Live Feeds</button>
+        </div>
         <div class="status-pills">
           <button id="pauseBtn" class="btn-top {{ pause_class }}">
             {{ pause_label }}
@@ -32,51 +36,65 @@
         </div>
       </header>
 
-      <main class="grid-layout">
-        <!-- Left: Hero Feeds -->
+      <main class="grid-layout" id="localConfigSection">
+        <!-- Left: Configuration (Rules & Settings) -->
         <div class="main-feed-group">
-          <div class="feed-grid">
-            <div class="card">
-              <div class="card-title">
-                <span class="live-dot {{ pause_class }}"></span>
-                Live Feed
-              </div>
-              <div class="video-wrapper">
-                <video id="webcam" autoplay playsinline muted></video>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-title">
-                <span class="inference-dot {{ pause_class }}"></span>
-                Inference
-              </div>
-              <div class="video-wrapper">
-                <img
-                  id="processedFeed"
-                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                  alt="AI Processed Stream"
-                />
-                <div id="aiOverlay" class="video-overlay {{ pause_class }}">
-                  <h2 style="margin-bottom: 0.5rem">AI OFFLINE</h2>
-                  <p style="color: var(--text-secondary); font-size: 0.9rem">
-                    Resume system to start reasoning
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card" style="flex: 1">
+          <!-- Rules Card -->
+          <div class="card">
             <div class="card-title">Rules</div>
             <div class="prompt-group">
               <textarea
                 id="promptInput"
                 placeholder="Describe what the AI should look for... (e.g., 'Alert if someone is wearing a dark shirt and eyeglasses')"
+                style="min-height: 150px; font-size: 1.1rem"
               ></textarea>
-              <button id="savePromptBtn" class="btn-primary">Deploy</button>
+              <button
+                id="savePromptBtn"
+                class="btn-primary"
+                style="align-self: flex-start; padding: 0.75rem 3rem"
+              >
+                Deploy
+              </button>
             </div>
           </div>
+
+          <!-- Settings Placeholder Card -->
+          <!-- <div class="card" style="flex: 1">
+            <div class="card-title">Settings</div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+                margin-top: 1rem;
+              "
+            >
+              <div>
+                <label style="color: var(--text-secondary); font-size: 0.9rem"
+                  >Confidence Threshold</label
+                >
+                <input
+                  type="range"
+                  style="width: 100%; margin-top: 0.5rem"
+                  min="0"
+                  max="100"
+                  value="50"
+                />
+              </div>
+              <div>
+                <label style="color: var(--text-secondary); font-size: 0.9rem"
+                  >Alert Cooldown (seconds)</label
+                >
+                <input
+                  type="range"
+                  style="width: 100%; margin-top: 0.5rem"
+                  min="1"
+                  max="10"
+                  value="5"
+                />
+              </div>
+            </div>
+          </div> -->
         </div>
 
         <!-- Right: Alerts & Logs -->
@@ -85,18 +103,29 @@
             class="card"
             style="height: 100%; display: flex; flex-direction: column"
           >
-            <div class="card-title">Reports</div>
-            <div id="log" class="incident-log">
+            <div class="card-title">Alerts</div>
+            <div
+              id="log"
+              class="incident-log"
+              style="height: 100%; min-height: 500px"
+            >
               <!-- Alerts will appear here -->
             </div>
           </div>
         </div>
       </main>
+
+      <main class="grid-layout" id="monitorSection" style="display: none; padding-top: 1rem;">
+        <div id="emptyGridState" style="grid-column: span 12; text-align: center; color: var(--text-secondary); padding: 4rem 1rem; border: 1px dashed var(--border); border-radius: 16px;">
+          <h3 style="margin-bottom: 0.5rem; color: #fff;">No Cameras Connected</h3>
+          <p>Open <b>/sender</b> on another device to start monitoring.</p>
+        </div>
+        <div class="feed-grid" id="monitorGrid" style="grid-column: span 12; display: none;">
+          <!-- Remote cameras will be dynamically injected here... -->
+        </div>
+      </main>
     </div>
 
-    <!-- Hidden canvas for frame capture -->
-    <canvas id="captureCanvas" style="display: none"></canvas>
-
-    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}?v={{ range(1, 1000000) | random }}"></script>
   </body>
 </html>
