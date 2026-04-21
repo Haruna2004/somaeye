@@ -11,6 +11,7 @@ from typing import List
 from vision_worker import VisionWorker
 from reasoning_engine import ReasoningEngine
 from audio_output import AudioOutput
+from notifier import TelegramNotifier
 from contextlib import asynccontextmanager
 from logger_utils import logger, time_it
 
@@ -27,6 +28,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip('"').strip("'")
 vision = VisionWorker()
 reasoner = ReasoningEngine(GEMINI_API_KEY)
 audio = AudioOutput()
+notifier = TelegramNotifier()
 
 # Global metrics for Heartbeat and Telemetry
 START_TIME = time.time()
@@ -39,7 +41,8 @@ current_prompt = "Alert if someone is acting suspicious or lingering."
 system_paused = False
 latest_frame_bytes = None
 last_gemini_vision_time = 0
-VISION_INTERVAL = 5 
+VISION_INTERVAL = 2
+ALERT_COOLDOWN = 5
 
 # Shared Connection Manager
 class ConnectionManager:
@@ -107,9 +110,13 @@ async def reasoning_loop():
                         ALERT_COUNT += 1
                         msg = result.get("message")
                         logger.warning(f"ALERT | TRIGGERED: {msg}")
+                        
+                        # Send notifications
                         await manager.broadcast({"alert": msg})
-                        audio.speak(msg)
-                        await asyncio.sleep(5)
+                        # audio.speak(msg)
+                        await notifier.send_alert(msg, img_to_send)
+                        
+                        await asyncio.sleep(ALERT_COOLDOWN)
                 else:
                     last_gemini_vision_time = 0
                     
